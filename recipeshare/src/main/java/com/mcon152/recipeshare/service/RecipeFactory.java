@@ -13,6 +13,9 @@ public class RecipeFactory {
             case "VEGETARIAN":
                 out = new VegetarianRecipe();
                 break;
+            case "SOUP":
+                out = new SoupRecipe();
+                break;
             case "DESSERT":
                 out = new DessertRecipe();
                 break;
@@ -33,6 +36,11 @@ public class RecipeFactory {
             out.setIngredients(req.getIngredients());
             out.setInstructions(req.getInstructions());
             out.setServings(req.getServings());
+            // subtype-specific copy
+            if (out instanceof SoupRecipe) {
+                SoupRecipe s = (SoupRecipe) out;
+                s.setSpiceLevel(req.getSpiceLevel());
+            }
         }
 
         return out;

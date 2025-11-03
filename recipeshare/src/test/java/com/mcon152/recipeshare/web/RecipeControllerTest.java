@@ -108,6 +108,39 @@ class RecipeControllerTest {
             verifyNoMoreInteractions(recipeService);
         }
 
+        @Test
+        void addSoupRecipe_returns201_andLocationHeader() throws Exception {
+            ObjectNode json = mapper.createObjectNode();
+            json.put("type", "SOUP");
+            json.put("title", "Hot Soup");
+            json.put("description", "Spicy goodness");
+            json.put("ingredients", "Water, Tomatoes, Chili");
+            json.put("instructions", "Boil and serve");
+            json.put("servings", 4);
+            json.put("spiceLevel", 7);
+            String jsonString = mapper.writeValueAsString(json);
+
+            // when service saves, return a SoupRecipe with assigned id and same spice level
+            SoupRecipe saved = new SoupRecipe(42L, "Hot Soup", "Spicy goodness", "Water, Tomatoes, Chili", "Boil and serve", 4, 7);
+            when(recipeService.addRecipe(any(Recipe.class))).thenReturn(saved);
+
+            mockMvc.perform(post("/api/recipes")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(jsonString))
+                .andExpect(status().isCreated())
+                .andExpect(header().string("Location", org.hamcrest.Matchers.containsString("/api/recipes/42")))
+                .andExpect(jsonPath("$.id").value(42))
+                .andExpect(jsonPath("$.title").value("Hot Soup"))
+                .andExpect(jsonPath("$.spiceLevel").value(7));
+
+            verify(recipeService).addRecipe(recipeCaptor.capture());
+            Recipe captured = recipeCaptor.getValue();
+            assertInstanceOf(SoupRecipe.class, captured);
+            assertNull(captured.getId());
+            assertEquals(Integer.valueOf(7), ((SoupRecipe) captured).getSpiceLevel());
+            verifyNoMoreInteractions(recipeService);
+        }
+
         @ParameterizedTest
         @CsvSource({
                 "'Chocolate Cake','Rich chocolate cake','2 cups flour;1 cup cocoa;4 eggs','Bake at 350F for 30 min'",
