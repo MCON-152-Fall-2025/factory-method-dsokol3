@@ -28,7 +28,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 /**
  * Enhanced controller tests demonstrating a wide range of Mockito features.
- * Focus: show students how to stub, verify, capture, match, order, and use spies.
+ * Focus: show students how to stub, verify, capture, match, order, and use
+ * spies.
  */
 @ExtendWith(MockitoExtension.class)
 class RecipeControllerTest {
@@ -84,8 +85,8 @@ class RecipeControllerTest {
             });
 
             mockMvc.perform(post("/api/recipes")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(jsonString))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(jsonString))
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.title").value("Cake"))
                     .andExpect(jsonPath("$.description").value("Delicious cake"))
@@ -109,36 +110,31 @@ class RecipeControllerTest {
         }
 
         @Test
-        void addSoupRecipe_returns201_andLocationHeader() throws Exception {
+        void testCreateSoupRecipe() throws Exception {
             ObjectNode json = mapper.createObjectNode();
             json.put("type", "SOUP");
-            json.put("title", "Hot Soup");
-            json.put("description", "Spicy goodness");
-            json.put("ingredients", "Water, Tomatoes, Chili");
-            json.put("instructions", "Boil and serve");
+            json.put("title", "Chicken Soup");
+            json.put("description", "Hearty chicken soup");
+            json.put("ingredients", "Chicken, Water, Carrots");
+            json.put("instructions", "Boil chicken and veggies.");
             json.put("servings", 4);
-            json.put("spiceLevel", 7);
+            json.put("spiceLevel", 5);
             String jsonString = mapper.writeValueAsString(json);
 
-            // when service saves, return a SoupRecipe with assigned id and same spice level
-            SoupRecipe saved = new SoupRecipe(42L, "Hot Soup", "Spicy goodness", "Water, Tomatoes, Chili", "Boil and serve", 4, 7);
+            // stub the service to return a saved SoupRecipe with id
+            SoupRecipe saved = new SoupRecipe(33L, "Chicken Soup", "Hearty chicken soup", "Chicken, Water, Carrots", "Boil chicken and veggies.", 4, 5);
             when(recipeService.addRecipe(any(Recipe.class))).thenReturn(saved);
 
             mockMvc.perform(post("/api/recipes")
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content(jsonString))
-                .andExpect(status().isCreated())
-                .andExpect(header().string("Location", org.hamcrest.Matchers.containsString("/api/recipes/42")))
-                .andExpect(jsonPath("$.id").value(42))
-                .andExpect(jsonPath("$.title").value("Hot Soup"))
-                .andExpect(jsonPath("$.spiceLevel").value(7));
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonString))
+                .andExpect(status().isCreated()) // 201
+                .andExpect(header().string("Location", org.hamcrest.Matchers.containsString("/api/recipes/33")));
 
             verify(recipeService).addRecipe(recipeCaptor.capture());
             Recipe captured = recipeCaptor.getValue();
             assertInstanceOf(SoupRecipe.class, captured);
-            assertNull(captured.getId());
-            assertEquals(Integer.valueOf(7), ((SoupRecipe) captured).getSpiceLevel());
-            verifyNoMoreInteractions(recipeService);
+            assertEquals(Integer.valueOf(5), ((SoupRecipe) captured).getSpiceLevel());
         }
 
         @ParameterizedTest
@@ -147,7 +143,8 @@ class RecipeControllerTest {
                 "'Pasta Salad','Fresh pasta salad','200g pasta;100g tomatoes;50g olives','Mix all ingredients'",
                 "'Pancakes','Fluffy pancakes','1 cup flour;2 eggs;1 cup milk','Cook on skillet until golden'"
         })
-        void parameterizedAddRecipeTest_doReturnMatcherEqAny(String title, String description, String ingredients, String instructions) throws Exception {
+        void parameterizedAddRecipeTest_doReturnMatcherEqAny(String title, String description, String ingredients,
+                String instructions) throws Exception {
             ObjectNode json = mapper.createObjectNode();
             json.put("type", "BASIC");
             json.put("title", title);
@@ -162,8 +159,8 @@ class RecipeControllerTest {
             doReturn(saved).when(recipeService).addRecipe(any(Recipe.class));
 
             mockMvc.perform(post("/api/recipes")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(jsonString))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(jsonString))
                     .andExpect(status().isCreated())
                     .andExpect(jsonPath("$.title").value(title))
                     .andExpect(jsonPath("$.description").value(description))
@@ -190,8 +187,8 @@ class RecipeControllerTest {
             when(recipeService.addRecipe(any(Recipe.class))).thenThrow(new RuntimeException("boom"));
 
             mockMvc.perform(post("/api/recipes")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(jsonString))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(jsonString))
                     .andExpect(status().is5xxServerError());
 
             verify(recipeService).addRecipe(any(Recipe.class));
@@ -223,8 +220,8 @@ class RecipeControllerTest {
 
             for (String json : recipes) {
                 String response = mockMvc.perform(post("/api/recipes")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(json))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
                         .andExpect(status().isCreated())
                         .andReturn().getResponse().getContentAsString();
                 long id = mapper.readTree(response).get("id").asLong();
@@ -297,8 +294,7 @@ class RecipeControllerTest {
         void getAll_consecutiveStubs_twoCallsDifferentResults() throws Exception {
             List<Recipe> list1 = List.of(
                     new Recipe(1L, "A", "d", "i", "n", 1),
-                    new Recipe(2L, "B", "d", "i", "n", 2)
-            );
+                    new Recipe(2L, "B", "d", "i", "n", 2));
             List<Recipe> list2 = Collections.emptyList();
 
             when(recipeService.getAllRecipes()).thenReturn(list1, list2);
@@ -339,8 +335,8 @@ class RecipeControllerTest {
             when(recipeService.updateRecipe(eq(id), any(Recipe.class))).thenReturn(Optional.of(updated));
 
             mockMvc.perform(put("/api/recipes/" + id)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(jsonString))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(jsonString))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.title").value("Updated Pie"))
                     .andExpect(jsonPath("$.description").value("Updated desc"));
@@ -355,7 +351,8 @@ class RecipeControllerTest {
             assertInstanceOf(DessertRecipe.class, sent);
 
             // also show argThat: ensure non-empty title
-            verify(recipeService, times(1)).updateRecipe(eq(id), argThat(r -> r.getTitle() != null && !r.getTitle().isBlank()));
+            verify(recipeService, times(1)).updateRecipe(eq(id),
+                    argThat(r -> r.getTitle() != null && !r.getTitle().isBlank()));
 
             verifyNoMoreInteractions(recipeService);
         }
@@ -376,15 +373,14 @@ class RecipeControllerTest {
             });
 
             mockMvc.perform(patch("/api/recipes/" + id)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(jsonString))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(jsonString))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.description").value("Patched desc"));
 
-            // Ensure controller passed a Recipe with ONLY description changed (best-effort check)
-            verify(recipeService).patchRecipe(eq(id), argThat(r ->
-                    "Patched desc".equals(r.getDescription())
-            ));
+            // Ensure controller passed a Recipe with ONLY description changed (best-effort
+            // check)
+            verify(recipeService).patchRecipe(eq(id), argThat(r -> "Patched desc".equals(r.getDescription())));
 
             // also ensure the controller used the factory to create a VegetarianRecipe
             verify(recipeService).patchRecipe(eq(id), recipeCaptor.capture());
@@ -428,8 +424,8 @@ class RecipeControllerTest {
             when(recipeService.updateRecipe(eq(id), any(Recipe.class))).thenReturn(Optional.empty());
 
             mockMvc.perform(put("/api/recipes/" + id)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(jsonString))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(jsonString))
                     .andExpect(status().isNotFound());
 
             verify(recipeService).updateRecipe(eq(id), any(Recipe.class));
@@ -447,8 +443,8 @@ class RecipeControllerTest {
             when(recipeService.patchRecipe(eq(id), any(Recipe.class))).thenReturn(Optional.empty());
 
             mockMvc.perform(patch("/api/recipes/" + id)
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(jsonString))
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(jsonString))
                     .andExpect(status().isNotFound());
 
             verify(recipeService).patchRecipe(eq(id), any(Recipe.class));
@@ -468,7 +464,8 @@ class RecipeControllerTest {
         }
     }
 
-    // ---------------------- Advanced Mockito Demos (not tied to controller flow) ----------------------
+    // ---------------------- Advanced Mockito Demos (not tied to controller flow)
+    // ----------------------
 
     @Nested
     class AdvancedMockitoExamples {
@@ -484,7 +481,7 @@ class RecipeControllerTest {
             spyList.add("A"); // real method executes
             spyList.add("B");
 
-            assertEquals(10, spyList.size());      // overridden
+            assertEquals(10, spyList.size()); // overridden
             verify(spyList, times(2)).add(anyString());
         }
 

@@ -22,11 +22,6 @@ public class Recipe {
 
     private Integer servings; // New field for number of servings
 
-    // Map discriminator column as a read-only field so DDL/copy operations include it; make it nullable and
-    // give a default so schema updates that INSERT without the column won't violate NOT NULL.
-    @Column(name = "recipe_type", insertable = false, updatable = false, nullable = true,
-            columnDefinition = "VARCHAR(31) DEFAULT 'BASIC'")
-    private String recipeType;
 
     // Constructors
     public Recipe() {}
@@ -59,8 +54,8 @@ public class Recipe {
     public Integer getServings() { return servings; }
     public void setServings(Integer servings) { this.servings = servings; }
 
-    // Read-only access to discriminator value
-    public String getRecipeType() { return recipeType; }
+    // discriminator column is declared on the class with @DiscriminatorColumn; no need
+    // to map it again as a field here.
 }
 
 
